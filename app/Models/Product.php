@@ -2,28 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    //
-    use HasFactory;
-
-    // Tentukan nama tabel jika tidak sesuai dengan nama default
-    protected $table = 'products';
-
-    // Tentukan kolom yang bisa diisi massal
     protected $fillable = [
-        'name',
-        'description',
-        'price',
-        'image',
-        'stock',
+        'name', 'price', 'description', 'image', 'stock'
     ];
 
-    // Tentukan tipe data kolom jika diperlukan
-    protected $casts = [
-        'price' => 'decimal:2',  // Untuk memastikan harga disimpan dengan 2 desimal
-    ];
+    // Relasi ke transaksi melalui pivot table
+    public function transactions()
+    {
+        return $this->belongsToMany(Transaction::class, 'transaction_products')
+                    ->withPivot('quantity', 'price', 'total')
+                    ->withTimestamps();
+    }
 }
