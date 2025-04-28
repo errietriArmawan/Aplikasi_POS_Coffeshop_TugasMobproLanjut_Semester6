@@ -18,6 +18,7 @@ class TransactionController extends Controller
             'products.*.product_id' => 'required|exists:products,id', // ID produk harus ada di database
             'products.*.quantity' => 'required|integer|min:1', // Kuantitas harus lebih dari 0
             'status' => 'required|string', // Status transaksi harus ada
+            'amount_paid' => 'required|numeric|min:0', // Jumlah yang dibayar
         ]);
 
         // Membuat transaksi baru
@@ -26,6 +27,7 @@ class TransactionController extends Controller
             'status' => $request->status,
             'notes' => $request->notes ?? '',
             'total' => 0, // Total akan dihitung berdasarkan produk yang dipilih
+            'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad(Transaction::count() + 1, 4, '0', STR_PAD_LEFT), // Generate invoice number
         ]);
 
         $total = 0; // Total harga transaksi
@@ -43,12 +45,35 @@ class TransactionController extends Controller
             $transaction->products()->attach($product->id, [
                 'quantity' => $productData['quantity'],
                 'price' => $product->price,
-                'total' => $productTotal,  // Total harga produk
+                'total' => $productTotal,
             ]);
+
+            // Mengurangi stok produk yang dibeli
+            if ($product->stock >= $productData['quantity']) {
+                $product->decrement('stock', $productData['quantity']); // Mengurangi stok produk
+            } else {
+                return response()->json(['error' => 'Not enough stock for product ' . $product->name], 400); // Error jika stok tidak cukup
+            }
         }
 
         // Memperbarui total transaksi
         $transaction->update(['total' => $total]);
+
+        // Menghitung kembalian jika jumlah yang dibayar lebih besar dari total
+        $changeDue = 0;
+        if ($request->amount_paid >= $total) {
+            $changeDue = $request->amount_paid - $total;
+        }
+
+        // Update kembalian dan status pembayaran
+        $transaction->update([
+            'change_due' => $changeDue,
+            'payment_status' => $changeDue > 0 ? 'paid' : 'unpaid', // Mengatur status pembayaran
+            'amount_paid' => $request->amount_paid
+        ]);
+
+        // Mengambil data transaksi dengan produk terkait
+        $transaction = $transaction->load('products');
 
         return response()->json($transaction, 201);
     }
@@ -76,6 +101,4 @@ class TransactionController extends Controller
             return response()->json(['error' => 'An error occurred', 'message' => $e->getMessage()], 500);
         }
     }
-    
-    
 }
