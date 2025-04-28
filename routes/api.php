@@ -30,6 +30,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     // Menambahkan prefix 'admin' pada users dan products
     Route::apiResource('/users', UserController::class); // Menambahkan prefix untuk users
     Route::resource('/products', ProductController::class); // Menambahkan prefix untuk products
+      
+    // Admin bisa semua melihat riwayat transaksi
+    Route::get('/transactions', [TransactionController::class, 'index']);   
+    // Admin bisa melihat riwayat transaksi dengan id
+    Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });
 
 // Grup route untuk Kasir
