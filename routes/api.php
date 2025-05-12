@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ReportController;
 
 // Route untuk tes
 Route::get('/hello', function () {
@@ -14,6 +15,9 @@ Route::get('/hello', function () {
 
 // Route untuk login
 Route::post('/login', [AuthController::class, 'login']);
+Route::middleware(['auth:sanctum'])->post('/logout', [AuthController::class, 'logout']);
+
+
 
 // Route Dashboard untuk Admin
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/dashboard', function () {
@@ -35,6 +39,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::get('/transactions', [TransactionController::class, 'index']);   
     // Admin bisa melihat riwayat transaksi dengan id
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+    Route::get('/daily', [ReportController::class, 'salesDaily']);
+    Route::get('/monthly', [ReportController::class, 'salesMonthly']);
 });
 
 // Grup route untuk Kasir
@@ -47,5 +53,8 @@ Route::middleware(['auth:sanctum', 'role:kasir'])->prefix('kasir')->group(functi
     
     // Kasir bisa melakukan transaksi
     Route::apiResource('/transactions', TransactionController::class);
+
+    Route::get('/daily', [ReportController::class, 'salesDaily']);
+    Route::get('/monthly', [ReportController::class, 'salesMonthly']);
 });
 
