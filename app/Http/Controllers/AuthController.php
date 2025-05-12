@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -41,4 +40,21 @@ class AuthController extends Controller
             'user' => $user,
         ], 200);
     }
+
+    // Fungsi untuk logout dan mencabut token
+    public function logout(Request $request)
+    {
+        // Pastikan user sudah terautentikasi
+        if (!$request->user()) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        // Ambil token saat ini dan hapus token yang sedang aktif
+        $request->user()->currentAccessToken()->delete();
+
+        // Respons logout berhasil
+        return response()->json(['message' => 'Logout successful'], 200);
+    }
+
+        
 }
