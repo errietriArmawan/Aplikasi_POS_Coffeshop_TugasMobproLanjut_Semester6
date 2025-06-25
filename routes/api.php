@@ -58,3 +58,8 @@ Route::middleware(['auth:sanctum', 'role:kasir'])->prefix('kasir')->group(functi
     Route::get('/monthly', [ReportController::class, 'salesMonthly']);
 });
 
+//Tetsting
+Route::get('/ping', function () {
+    return response()->json(['message' => 'API Connected!']);
+});
+
